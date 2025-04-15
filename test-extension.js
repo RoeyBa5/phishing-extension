@@ -21,7 +21,7 @@ fs.createReadStream('sample_data.csv')
         const OUTPUT_FILE = 'results.csv';
 
         // Initialize the output file with headers
-        fs.writeFileSync(OUTPUT_FILE, 'URL,TrueLabel,PhishingDetected,LoadTime(ms),JSHeapUsedSize(bytes),Error\n', 'utf-8');
+        fs.writeFileSync(OUTPUT_FILE, 'URL,TrueLabel,PhishingDetected,Score,Warnings,LoadTime(ms),JSHeapUsedSize(bytes),Error\n', 'utf-8');
 
         try {
             // Launch Puppeteer with the extension loaded
@@ -59,6 +59,8 @@ fs.createReadStream('sample_data.csv')
                     const startTime = Date.now();
 
                     let phishingDetected = false;
+                    let phishingScore = 0;
+                    let phishingWarnings = [];
 
                     // Wait for phishing detection complete message
                     const detectionPromise = new Promise((resolve) => {
@@ -66,18 +68,29 @@ fs.createReadStream('sample_data.csv')
                             const text = msg.text();
                             console.log(`[Console] ${text}`);
 
-                            if (text.includes("Phishing detected")) {
-                                phishingDetected = true;
+                            // Listen for the phishing check results log
+                            if (text.startsWith('[Content] Sending phishing check results:')) {
+                                try {
+                                    // Extract the JSON object from the log
+                                    const match = text.match(/\{.*\}$/);
+                                    if (match) {
+                                        const result = JSON.parse(match[0]);
+                                        phishingScore = result.score;
+                                        phishingWarnings = result.warnings || [];
+                                        phishingDetected = phishingScore > 0;
+                                    }
+                                } catch (e) {
+                                    console.error('Failed to parse phishing check results:', e);
+                                }
                             }
 
-                            if (text.includes("Phishing detection complete")) {
+                            if (text.includes('Phishing detection complete')) {
                                 page.off('console', onConsole);
                                 resolve();
                             }
                         };
                         page.on('console', onConsole);
                     });
-
 
                     // Navigate to the URL
                     const response = await page.goto(url, {
@@ -95,14 +108,14 @@ fs.createReadStream('sample_data.csv')
                     const metrics = await page.metrics();
                     const jsHeapUsedSize = metrics.JSHeapUsedSize;
 
-                    // Write the result to the output file
+                    // Write the result to the output file, including warnings
                     fs.appendFileSync(
                         OUTPUT_FILE,
-                        `${url},${label},${phishingDetected},${loadTime},${jsHeapUsedSize},\n`,
+                        `${url},${label},${phishingDetected},${phishingScore},"${phishingWarnings.join('; ')}",${loadTime},${jsHeapUsedSize},\n`,
                         'utf-8'
                     );
 
-                    console.log(`Processed: ${url} - True Label: ${label} - Phishing Detected: ${phishingDetected} - Load Time: ${loadTime} ms - JS Heap Used Size: ${jsHeapUsedSize} bytes`);
+                    console.log(`Processed: ${url} - True Label: ${label} - Phishing Detected: ${phishingDetected} - Score: ${phishingScore} - Warnings: ${phishingWarnings.join('; ')} - Load Time: ${loadTime} ms - JS Heap Used Size: ${jsHeapUsedSize} bytes`);
                 } catch (error) {
                     console.error(`Error processing ${url}:`, error.message);
                     fs.appendFileSync(

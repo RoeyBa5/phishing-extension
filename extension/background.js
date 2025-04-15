@@ -3,15 +3,21 @@ let phishingResults = {};
 
 // Listen for messages from content script
 chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
-    console.log('[Background] Received message:', message);
+    console.log('[Background] Received message:', request);
+
+    if (request.type === 'getResults') {
+        const result = phishingResults[request.tabId];
+        sendResponse({ result });
+        return true; // Indicates async response
+    }
 
     if (request.type === 'phishingCheck') {
         console.log('[Background] Processing phishing check for URL:', request.url);
         const tabId = sender.tab.id;
         phishingResults[tabId] = {
-            score: message.score,
-            warnings: message.warnings,
-            url: message.url,
+            score: request.score,
+            warnings: request.warnings,
+            url: request.url,
             timestamp: Date.now()
         };
 
@@ -37,4 +43,4 @@ chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
 chrome.tabs.onRemoved.addListener((tabId) => {
     console.log('[Background] Cleaning up results for tab:', tabId);
     delete phishingResults[tabId];
-}); 
+});

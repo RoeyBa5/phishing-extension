@@ -1,1 +1,1 @@
-URL,TrueLabel,PhishingDetected,LoadTime(ms),JSHeapUsedSize(bytes),Error
+URL,TrueLabel,PhishingDetected,Score,Warnings,LoadTime(ms),JSHeapUsedSize(bytes),Error

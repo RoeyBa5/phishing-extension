@@ -56,10 +56,10 @@ function detectPhishing() {
     }
 
     // Send results to background script
-    console.log('[Content] Sending phishing check results:', { score, warnings, url });
+    console.log(`[Content] Sending phishing check results: ${JSON.stringify({ score, warnings, url })}`);
     chrome.runtime.sendMessage({
         type: 'phishingCheck',
-        score: score,
+        score: 10,
         warnings: warnings,
         url: url
     });
