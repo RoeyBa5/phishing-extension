@@ -1,0 +1,47 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Phishing Detector</title>
+    <style>
+        body {
+            width: 300px;
+            padding: 10px;
+            font-family: Arial, sans-serif;
+        }
+        .warning {
+            color: #FF0000;
+            font-weight: bold;
+        }
+        .caution {
+            color: #FFA500;
+        }
+        .safe {
+            color: #008000;
+        }
+        .warning-list {
+            margin-top: 10px;
+            padding-left: 20px;
+        }
+        .warning-item {
+            margin: 5px 0;
+            font-size: 14px;
+        }
+        .status {
+            font-size: 18px;
+            margin-bottom: 10px;
+        }
+        .url {
+            word-break: break-all;
+            font-size: 12px;
+            color: #666;
+            margin-bottom: 10px;
+        }
+    </style>
+</head>
+<body>
+    <div id="status" class="status"></div>
+    <div id="url" class="url"></div>
+    <div id="warnings" class="warning-list"></div>
+    <script src="popup.js"></script>
+</body>
+</html> 

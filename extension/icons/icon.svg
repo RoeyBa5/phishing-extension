@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg width="128" height="128" viewBox="0 0 128 128" xmlns="http://www.w3.org/2000/svg">
+    <!-- Shield background -->
+    <path d="M64 8L16 24v40c0 32 48 56 48 56s48-24 48-56V24L64 8z" fill="#4285F4"/>
+    
+    <!-- Warning symbol -->
+    <path d="M64 40c2.2 0 4 1.8 4 4v24c0 2.2-1.8 4-4 4s-4-1.8-4-4V44c0-2.2 1.8-4 4-4z" fill="#FFFFFF"/>
+    <circle cx="64" cy="80" r="4" fill="#FFFFFF"/>
+</svg> 
