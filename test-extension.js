@@ -42,13 +42,11 @@ fs.createReadStream('sample_data.csv')
             // Set a longer timeout for page loads
             page.setDefaultNavigationTimeout(30000);
 
-            //   // Enable request interception
-            //   await page.setRequestInterception(true);
-
             // Handle failed requests
             page.on('requestfailed', request => {
                 console.error(`Request failed: ${request.url()} - ${request.failure().errorText}`);
             });
+            // page.on('console', msg => console.log('PAGE LOG:', msg.text));
 
 
             for (const { url, label } of urls) {
@@ -58,47 +56,34 @@ fs.createReadStream('sample_data.csv')
                     // Start timing
                     const startTime = Date.now();
 
-                    let phishingDetected = false;
-                    let phishingScore = 0;
-                    let phishingWarnings = [];
-
-                    // Wait for phishing detection complete message
-                    const detectionPromise = new Promise((resolve) => {
-                        const onConsole = (msg) => {
-                            const text = msg.text();
-                            console.log(`[Console] ${text}`);
-
-                            // Listen for the phishing check results log
-                            if (text.startsWith('[Content] Sending phishing check results:')) {
-                                try {
-                                    // Extract the JSON object from the log
-                                    const match = text.match(/\{.*\}$/);
-                                    if (match) {
-                                        const result = JSON.parse(match[0]);
-                                        phishingScore = result.score;
-                                        phishingWarnings = result.warnings || [];
-                                        phishingDetected = phishingScore > 0;
-                                    }
-                                } catch (e) {
-                                    console.error('Failed to parse phishing check results:', e);
-                                }
-                            }
-
-                            if (text.includes('Phishing detection complete')) {
-                                page.off('console', onConsole);
-                                resolve();
-                            }
-                        };
-                        page.on('console', onConsole);
-                    });
-
                     // Navigate to the URL
-                    const response = await page.goto(url, {
+                    await page.goto(url, {
                         waitUntil: 'networkidle0',
                         timeout: 30000
                     });
-
-                    await detectionPromise;
+                    
+                    let payload = null;
+                    const maxRetries = 20;
+                    let retries = 0;
+                  
+                    while (retries < maxRetries) {
+                      payload = await page.evaluate(() => {
+                        const bridge = document.getElementById('phishing-detector-bridge');
+                        if (bridge) {
+                          try {
+                            return JSON.parse(bridge.innerText);
+                          } catch (e) {
+                            return null;
+                          }
+                        }
+                        return null;
+                      });
+                  
+                      if (payload) break;
+                  
+                      await new Promise(resolve => setTimeout(resolve, 200));  // wait 200ms
+                      retries++;
+                    }
 
                     // End timing
                     const endTime = Date.now();
@@ -106,16 +91,20 @@ fs.createReadStream('sample_data.csv')
 
                     // Get JS heap size
                     const metrics = await page.metrics();
-                    const jsHeapUsedSize = metrics.JSHeapUsedSize;
+                    const jsHeapUsedSizeMB = metrics.JSHeapUsedSize / 1024 / 1024;
+                    const phishingScore = payload.score;
+                    const phishingWarnings = payload.warnings;
+                    const phishingDetected = phishingScore >= 3;
+                    const isActualPhishing = label == 1;
 
                     // Write the result to the output file, including warnings
                     fs.appendFileSync(
                         OUTPUT_FILE,
-                        `${url},${label},${phishingDetected},${phishingScore},"${phishingWarnings.join('; ')}",${loadTime},${jsHeapUsedSize},\n`,
+                        `${url},${isActualPhishing},${phishingDetected},${phishingScore},"${phishingWarnings.join('; ')}",${loadTime},${jsHeapUsedSizeMB},\n`,
                         'utf-8'
                     );
 
-                    console.log(`Processed: ${url} - True Label: ${label} - Phishing Detected: ${phishingDetected} - Score: ${phishingScore} - Warnings: ${phishingWarnings.join('; ')} - Load Time: ${loadTime} ms - JS Heap Used Size: ${jsHeapUsedSize} bytes`);
+                    console.log(`Processed: ${url} - True Label: ${isActualPhishing} - Phishing Detected: ${phishingDetected} - Score: ${phishingScore} - Warnings: ${phishingWarnings.join('; ')} - Load Time: ${loadTime} ms - JS Heap Used Size: ${jsHeapUsedSizeMB} MB`);
                 } catch (error) {
                     console.error(`Error processing ${url}:`, error.message);
                     fs.appendFileSync(

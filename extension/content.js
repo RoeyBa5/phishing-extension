@@ -57,12 +57,20 @@ function detectPhishing() {
 
     // Send results to background script
     console.log(`[Content] Sending phishing check results: ${JSON.stringify({ score, warnings, url })}`);
-    chrome.runtime.sendMessage({
+    // Inside content script
+    const result = {
         type: 'phishingCheck',
-        score: 10,
+        score: score,
         warnings: warnings,
-        url: url
-    });
+        url: url        
+    }
+    const secretDiv = document.createElement('div');
+    secretDiv.id = 'phishing-detector-bridge';
+    secretDiv.style.display = 'none';  // Hide it
+    document.body.appendChild(secretDiv);
+    secretDiv.innerHTML = JSON.stringify(result);
+
+    chrome.runtime.sendMessage(result);
 
     // wait for 1 second
     setTimeout(() => {
