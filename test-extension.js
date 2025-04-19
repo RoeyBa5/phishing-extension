@@ -81,7 +81,7 @@ fs.createReadStream('sample_data.csv')
                   
                       if (payload) break;
                   
-                      await new Promise(resolve => setTimeout(resolve, 200));  // wait 200ms
+                      await new Promise(resolve => setTimeout(resolve, 2000000));  // wait 200ms
                       retries++;
                     }
 
