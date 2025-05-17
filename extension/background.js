@@ -1,5 +1,3 @@
-import {pipeline} from '@huggingface/transformers';
-
 // Store phishing results
 let phishingResults = {};
 
@@ -24,6 +22,23 @@ chrome.tabs.onRemoved.addListener((tabId) => {
 });
 
 async function detectPhishing(url, content) {
+    // await classifyUrl(url).then(
+    //     (result) => {
+    //         console.log("URL classification result:", result);
+    //         const score = 10 ? result[0].label === "LABEL_1" : 0;
+    //         const label = score > 3 ? "phishing" : "safe";
+    //         return {
+    //             score: score,
+    //             warnings: [],
+    //             url: url,
+    //             label: label
+    //         };
+    //     }
+    // ).catch((error) => {
+    //     console.error("Error classifying URL:", error);
+    //     throw error
+    // });
+    // );
     const score = 10
     const label = score > 3 ? "phishing" : "safe"
     const result = {
@@ -68,6 +83,15 @@ function sendResults(tabId, result) {
         result: JSON.stringify(result)
     });
 }
+
+// async function classifyUrl(url) {
+//     const classifier = await pipeline(
+//         'text-classification', 'roeyba5/urlbert-tiny-v4-phishing-classifier-onnx', {
+//             device: "auto",
+//         });
+//     const result = await classifier(url);
+//     return result;
+// }
 
 
 // // Phishing detection logic

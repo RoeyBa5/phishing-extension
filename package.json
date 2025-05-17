@@ -3,6 +3,7 @@
   "dependencies": {
     "@huggingface/transformers": "^3.5.0",
     "csv-parser": "^3.2.0",
+    "onnxruntime-web": "^1.22.0-dev.20250409-89f8206ba4",
     "puppeteer": "^24.6.1"
   }
 }

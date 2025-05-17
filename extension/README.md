@@ -46,8 +46,8 @@ To modify the extension:
 ## Files
 
 - `manifest.json`: Extension configuration
-- `content.js`: Phishing detection logic
-- `background.js`: Background processes and message handling
+- `content.ts`: Phishing detection logic
+- `background.ts`: Background processes and message handling
 - `popup.html`: Popup interface
 - `popup.js`: Popup functionality
 
