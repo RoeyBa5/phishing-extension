@@ -35,6 +35,7 @@ fs.createReadStream('test_data.csv')
 
         for (const {url, label} of urls) {
             const page = await browser.newPage();
+
             console.log(`Processing URL: ${url}`);
             try {
                 // Handle failed requests
